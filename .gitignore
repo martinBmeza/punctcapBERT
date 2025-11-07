@@ -1,0 +1,30 @@
+# project
+results/*
+
+# Python
+cache
+*__pycache__*
+*.ipynb_checkpoints*
+*.npy
+*.pyc
+
+# vim
+*.swp
+*.swo
+
+# Aux files
+*.log
+
+# keys/tokens
+keys.py
+
+# debug stuff
+asd.png
+asd.txt
+asd.pt
+asd.npy
+
+# but...
+#!
+
+

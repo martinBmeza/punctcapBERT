@@ -1,0 +1,13 @@
+metadata: data/processed/train/metadata_train.parquet
+tokenizer: bert-base-multilingual-cased
+out_dir: results/ 
+
+# training
+device: cuda
+lr: 0.001
+batch_size: 32
+epochs: 100
+max_examples: 5
+
+embed_dim: 256
+hidden_dim: 256
