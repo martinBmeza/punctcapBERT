@@ -1,5 +1,7 @@
 certifi==2025.11.12
 charset-normalizer==3.4.4
+cramjam==2.11.0
+fastparquet==2024.11.0
 filelock==3.19.1
 fsspec==2025.9.0
 hf-xet==1.2.0
@@ -13,6 +15,7 @@ numpy==2.3.5
 packaging==25.0
 pandas==2.3.3
 pillow==11.3.0
+pyarrow==22.0.0
 python-dateutil==2.9.0.post0
 pytz==2025.2
 PyYAML==6.0.3
@@ -23,8 +26,8 @@ setuptools==70.2.0
 six==1.17.0
 sympy==1.14.0
 tokenizers==0.22.1
-torch==2.9.1+cpu
-torchvision==0.24.1+cpu
+# torch==2.9.1+cpu
+# torchvision==0.24.1+cpu
 tqdm==4.67.1
 transformers==4.57.3
 typing_extensions==4.15.0
