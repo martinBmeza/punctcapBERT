@@ -27,4 +27,5 @@ asd.npy
 # but...
 #!
 
-
+# venv
+.venv
