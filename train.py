@@ -163,16 +163,17 @@ def main():
         print(f"Epoch {epoch} summary:", epoch_metrics)
 
         # save checkpoint
-        ckpt_path = os.path.join(out_dir, f"rnn_epoch{epoch}_loss{epoch_metrics['total_loss']:.4f}.pt")
-        torch.save({
-            "epoch": epoch, 
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "metrics": epoch_metrics,
-            "vocab_size": vocab_size,
-            "args": vars(args)
-        }, ckpt_path)
-        print("Saved checkpoint:", ckpt_path)
+        if config.get('store_checkpoints', False):
+            ckpt_path = os.path.join(out_dir, f"rnn_epoch{epoch}_loss{epoch_metrics['total_loss']:.4f}.pt")
+            torch.save({
+                "epoch": epoch, 
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "metrics": epoch_metrics,
+                "vocab_size": vocab_size,
+                "args": vars(args)
+            }, ckpt_path)
+            print("Saved checkpoint:", ckpt_path)
 
         if epoch_metrics["total_loss"] < best_loss:
             best_loss = epoch_metrics["total_loss"]

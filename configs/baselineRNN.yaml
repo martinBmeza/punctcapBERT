@@ -11,3 +11,4 @@ max_examples: 5
 
 embed_dim: 256
 hidden_dim: 256
+store_checkpoints: False
