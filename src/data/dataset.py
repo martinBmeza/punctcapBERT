@@ -11,7 +11,8 @@ import torch
 class TokenChunkDataset(Dataset):
     """
     .npz:
-      - token_ids: (T,)
+      - token_ids: (T,) - optional, for reference
+      - bert_embeddings: (T, 768) - pre-computed BERT embeddings
       - tokens: (T,)  optional
       - word_ids: (T,)  optional
       - labels_punt_ini: (T,)  # binary 0/1
@@ -67,7 +68,14 @@ class TokenChunkDataset(Dataset):
             raise FileNotFoundError(f"Chunk file not found: {path}")
         data = self._load_npz(path)
 
+        # Load embeddings (required) and token_ids (optional, for reference)
+        #import pdb; pdb.set_trace()
+        bert_embeddings = data.get("bert_embeddings")
         token_ids = data.get("token_ids")
+        
+        if bert_embeddings is None:
+            raise ValueError(f"bert_embeddings missing in {path}")
+        
         labels_p_ini = data.get("labels_punt_ini")
         labels_p_fin = data.get("labels_punt_fin")
         labels_cap = data.get("labels_cap")
@@ -83,11 +91,15 @@ class TokenChunkDataset(Dataset):
             else:
                 original_text = str(raw)
 
-        if token_ids is None:
-            raise ValueError(f"token_ids missing in {path}")
-
-        T = int(len(token_ids))
-        token_ids = np.array(token_ids, dtype=np.int64)
+        T = int(len(bert_embeddings))
+        bert_embeddings = np.array(bert_embeddings, dtype=np.float32)
+        
+        # token_ids might be None if not stored
+        if token_ids is not None:
+            token_ids = np.array(token_ids, dtype=np.int64)
+        else:
+            token_ids = np.zeros(T, dtype=np.int64)  # placeholder
+            
         labels_p_ini = np.array(labels_p_ini, dtype=np.int64) if labels_p_ini is not None else np.zeros(T, dtype=np.int64)
         labels_p_fin = np.array(labels_p_fin, dtype=np.int64) if labels_p_fin is not None else np.zeros(T, dtype=np.int64)
         labels_cap = np.array(labels_cap, dtype=np.int64) if labels_cap is not None else np.zeros(T, dtype=np.int64)
@@ -98,7 +110,8 @@ class TokenChunkDataset(Dataset):
             word_ids = np.arange(T, dtype=np.int64)
 
         item = {
-            "token_ids": token_ids,
+            "bert_embeddings": bert_embeddings,
+            "token_ids": token_ids,  # optional, for reference
             "labels_p_ini": labels_p_ini,
             "labels_p_fin": labels_p_fin,
             "labels_cap": labels_cap,
@@ -114,7 +127,8 @@ class TokenChunkDataset(Dataset):
 
 def collate_fn_pad(batch: List[Dict[str, Any]], pad_value: int = 0, ignore_index: int = -100):
     """
-      - token_ids: LongTensor (B, T)
+      - bert_embeddings: FloatTensor (B, T, 768) - padded with zeros
+      - token_ids: LongTensor (B, T) - optional, for reference
       - attention_mask: BoolTensor (B, T)
       - labels_p_ini: FloatTensor (B, T)  (0/1 floats)  # for BCEWithLogitsLoss
       - labels_p_fin: LongTensor (B, T)  (0..C-1) with pad positions = ignore_index (for CrossEntropy)
@@ -127,7 +141,11 @@ def collate_fn_pad(batch: List[Dict[str, Any]], pad_value: int = 0, ignore_index
     batch_size = len(batch)
     lengths = [int(x["n_tokens"]) for x in batch]
     max_len = max(lengths)
+    
+    # Get embedding dimension from first sample
+    embed_dim = batch[0]["bert_embeddings"].shape[-1]
 
+    bert_embeddings_batch = torch.zeros((batch_size, max_len, embed_dim), dtype=torch.float32)
     token_ids_batch = torch.full((batch_size, max_len), pad_value, dtype=torch.long)
     attention_mask = torch.zeros((batch_size, max_len), dtype=torch.bool)
 
@@ -142,6 +160,7 @@ def collate_fn_pad(batch: List[Dict[str, Any]], pad_value: int = 0, ignore_index
     original_texts: List[Optional[str]] = []
     for i, item in enumerate(batch):
         L = item["n_tokens"]
+        bert_embeddings_batch[i, :L] = torch.from_numpy(item["bert_embeddings"]).to(torch.float32)
         token_ids_batch[i, :L] = torch.from_numpy(item["token_ids"]).to(torch.long)
         attention_mask[i, :L] = 1
 
@@ -155,7 +174,8 @@ def collate_fn_pad(batch: List[Dict[str, Any]], pad_value: int = 0, ignore_index
         original_texts.append(item.get("original_text"))
 
     batch_out = {
-        "token_ids": token_ids_batch,
+        "bert_embeddings": bert_embeddings_batch,
+        "token_ids": token_ids_batch,  # optional, for reference
         "attention_mask": attention_mask,
         "labels_p_ini": labels_p_ini,
         "labels_p_fin": labels_p_fin,

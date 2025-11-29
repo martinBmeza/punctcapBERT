@@ -1,0 +1,33 @@
+metadata: data/processed/hamlet_split/metadata_train.parquet
+out_dir: results/ 
+
+# wandb logging
+use_wandb: true
+wandb_log_steps: false  
+wandb_project: punctcapBERT
+wandb_run_name: "hamlet_LSTM"
+wandb_tags: ["rnn", "bert-embeddings", "stratified"]
+wandb_notes: "Baseline RNN with stratified train/val split"
+
+# validation
+validation_metadata: data/processed/hamlet_split/metadata_val.parquet
+evaluate_every_n_epochs: 1  # Evaluate on validation set every N epochs
+
+#model
+model_name: RNN
+model_params:
+  embed_dim: 768
+  hidden_dim: 128
+  num_layers: 2
+
+# training
+device: cuda
+lr: 0.001
+batch_size: 128
+epochs: 100
+max_examples: 0
+
+# class weighting for imbalanced data
+use_class_weights: true
+
+store_checkpoints: false
