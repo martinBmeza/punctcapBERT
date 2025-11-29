@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-PYTHONPATH=. python train.py --config configs/hamlet_RNN.yaml 
+#PYTHONPATH=. python train.py --config configs/hamlet_RNN.yaml 
 PYTHONPATH=. python train.py --config configs/hamlet_GRU.yaml 
 PYTHONPATH=. python train.py --config configs/hamlet_LSTM.yaml 
 PYTHONPATH=. python train.py --config configs/hamlet_BiLSTM.yaml 

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class SimpleRNNModel(nn.Module):
+class RNNModel(nn.Module):
     """
     Pre-computed BERT embeddings -> GRU -> per-token heads:
       - punt_inicial: binary (logit)
