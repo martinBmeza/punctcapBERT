@@ -1,5 +1,6 @@
 # project
 results/*
+data/processed*
 
 # Python
 cache

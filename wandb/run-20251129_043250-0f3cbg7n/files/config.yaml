@@ -1,0 +1,202 @@
+_wandb:
+    value:
+        cli_version: 0.21.4
+        e:
+            bayvs86p9n81ut5hiq3gdb4tkioid5q0:
+                args:
+                    - --config
+                    - configs/hamlet_RNN.yaml
+                codePath: train.py
+                codePathLocal: train.py
+                cpu_count: 8
+                cpu_count_logical: 16
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "982820896768"
+                        used: "538160173056"
+                email: camartinbu@gmail.com
+                executable: /home/mmeza/anaconda3/envs/prosody/bin/python
+                git:
+                    commit: d60844913a0870534c89838a65a48fa19509c55d
+                    remote: git@github.com:martinBmeza/punctcapBERT.git
+                gpu: NVIDIA GeForce RTX 3090
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ampere
+                      cudaCores: 10496
+                      memoryTotal: "25769803776"
+                      name: NVIDIA GeForce RTX 3090
+                      uuid: GPU-35708f34-ddfd-978a-a032-d49789d185d8
+                host: mate
+                memory:
+                    total: "33439940608"
+                os: Linux-6.8.0-87-generic-x86_64-with-glibc2.35
+                program: /home/mmeza/punctcapBERT/train.py
+                python: CPython 3.9.12
+                root: /home/mmeza/punctcapBERT
+                startedAt: "2025-11-29T07:32:50.059189Z"
+                writerId: bayvs86p9n81ut5hiq3gdb4tkioid5q0
+        m: []
+        python_version: 3.9.12
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 49
+                - 53
+            "2":
+                - 1
+                - 5
+                - 11
+                - 49
+                - 53
+            "3":
+                - 13
+                - 15
+                - 16
+            "4": 3.9.12
+            "5": 0.21.4
+            "6": 4.50.3
+            "12": 0.21.4
+            "13": linux-x86_64
+        visualize:
+            confusion_matrix_cap:
+                panel_config:
+                    fieldSettings:
+                        Actual: Actual
+                        Predicted: Predicted
+                        nPredictions: nPredictions
+                    panelDefId: wandb/confusion_matrix/v1
+                    stringSettings:
+                        title: Confusion Matrix Curve
+                    transform:
+                        name: tableWithLeafColNames
+                    userQuery:
+                        queryFields:
+                            - args:
+                                - name: runSets
+                                  value: ${runSets}
+                              fields:
+                                - fields: []
+                                  name: id
+                                - fields: []
+                                  name: name
+                                - fields: []
+                                  name: _defaultColorIndex
+                                - args:
+                                    - name: tableKey
+                                      value: confusion_matrix_cap_table
+                                  fields: []
+                                  name: summaryTable
+                              name: runSets
+                panel_type: Vega2
+            confusion_matrix_p_fin:
+                panel_config:
+                    fieldSettings:
+                        Actual: Actual
+                        Predicted: Predicted
+                        nPredictions: nPredictions
+                    panelDefId: wandb/confusion_matrix/v1
+                    stringSettings:
+                        title: Confusion Matrix Curve
+                    transform:
+                        name: tableWithLeafColNames
+                    userQuery:
+                        queryFields:
+                            - args:
+                                - name: runSets
+                                  value: ${runSets}
+                              fields:
+                                - fields: []
+                                  name: id
+                                - fields: []
+                                  name: name
+                                - fields: []
+                                  name: _defaultColorIndex
+                                - args:
+                                    - name: tableKey
+                                      value: confusion_matrix_p_fin_table
+                                  fields: []
+                                  name: summaryTable
+                              name: runSets
+                panel_type: Vega2
+            confusion_matrix_p_ini:
+                panel_config:
+                    fieldSettings:
+                        Actual: Actual
+                        Predicted: Predicted
+                        nPredictions: nPredictions
+                    panelDefId: wandb/confusion_matrix/v1
+                    stringSettings:
+                        title: Confusion Matrix Curve
+                    transform:
+                        name: tableWithLeafColNames
+                    userQuery:
+                        queryFields:
+                            - args:
+                                - name: runSets
+                                  value: ${runSets}
+                              fields:
+                                - fields: []
+                                  name: id
+                                - fields: []
+                                  name: name
+                                - fields: []
+                                  name: _defaultColorIndex
+                                - args:
+                                    - name: tableKey
+                                      value: confusion_matrix_p_ini_table
+                                  fields: []
+                                  name: summaryTable
+                              name: runSets
+                panel_type: Vega2
+batch_size:
+    value: 128
+confusion_matrix_every_n_epochs:
+    value: 5
+device:
+    value: cuda
+epochs:
+    value: 100
+evaluate_every_n_epochs:
+    value: 1
+log_confusion_matrices:
+    value: true
+lr:
+    value: 0.001
+max_examples:
+    value: 0
+metadata:
+    value: data/processed/hamlet_split/metadata_train.parquet
+model_name:
+    value: RNN
+model_params:
+    value:
+        embed_dim: 768
+        hidden_dim: 128
+        num_layers: 2
+out_dir:
+    value: results/
+store_checkpoints:
+    value: false
+use_class_weights:
+    value: true
+use_wandb:
+    value: true
+validation_metadata:
+    value: data/processed/hamlet_split/metadata_val.parquet
+wandb_log_steps:
+    value: false
+wandb_notes:
+    value: Baseline RNN with stratified train/val split
+wandb_project:
+    value: punctcapBERT
+wandb_run_name:
+    value: hamlet_RNN
+wandb_tags:
+    value:
+        - rnn
+        - bert-embeddings
+        - stratified
