@@ -1,0 +1,15 @@
+Recall Sin puntuación: 0.9999503611228314
+Recall ¿: nan
+
+Precision Sin puntuación: 1.0
+Precision ¿: 0.0
+
+FPR Sin puntuación: 1.0
+FPR ¿: 0.0
+
+F1 Sin puntuación: 0.999975179945396
+F1 ¿: nan
+
+F1 Macro: nan
+Accuracy: 0.9999503611228314
+Balanced Accuracy: nan
