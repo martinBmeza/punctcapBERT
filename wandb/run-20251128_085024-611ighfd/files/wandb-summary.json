@@ -1,1 +1,0 @@
-{"best_epoch":3,"epoch_loss":0.41603700540683886,"_runtime":18,"epoch":3,"_timestamp":1.7643306409675422e+09,"epoch_acc_p_fin":0.8939403774877074,"_step":5,"_wandb":{"runtime":18},"best_loss":0.41603700540683886,"epoch_acc_cap":0.9434085955064764,"epoch_acc_p_ini":0.999849591305647}
