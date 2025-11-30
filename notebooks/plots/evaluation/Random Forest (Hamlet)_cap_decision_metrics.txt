@@ -1,0 +1,19 @@
+Recall 0 hola: 0.9248039914468995
+Recall 1 Hola: 0.7505827505827506
+Recall 3 UBA: nan
+
+Precision 0 hola: 0.9864419665484034
+Precision 1 Hola: 0.33717277486910996
+Precision 3 UBA: nan
+
+FPR 0 hola: 0.6628272251308901
+FPR 1 Hola: 0.013558033451596554
+FPR 3 UBA: 0.0
+
+F1 0 hola: 0.9546290619251993
+F1 1 Hola: 0.4653179190751446
+F1 3 UBA: nan
+
+F1 Macro: nan
+Accuracy: 0.916355826833955
+Balanced Accuracy: nan

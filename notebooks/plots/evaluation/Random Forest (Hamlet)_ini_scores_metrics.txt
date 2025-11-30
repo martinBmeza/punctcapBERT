@@ -1,0 +1,9 @@
+AUC ROC OvR Sin puntuación: 0.8788334889958569
+AUC ROC OvR ¿: 0.8788334889958571
+
+Average Precision OvR Sin puntuación: 0.997620585514194
+Average Precision OvR ¿: 0.399213047083619
+
+Cross Entropy: 0.08683697959031059
+AUC ROC OvR Macro: 0.878833488995857
+Average Precision Macro: 0.6984168162989065

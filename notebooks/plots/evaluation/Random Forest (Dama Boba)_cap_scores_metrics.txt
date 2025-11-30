@@ -1,0 +1,11 @@
+AUC ROC OvR 0 hola: 0.9576210626207817
+AUC ROC OvR 1 Hola: 0.9556970595224502
+AUC ROC OvR 3 UBA: nan
+
+Average Precision OvR 0 hola: 0.9861520036302529
+Average Precision OvR 1 Hola: 0.9023521813900528
+Average Precision OvR 3 UBA: 0.0
+
+Cross Entropy: 0.22208816959008293
+AUC ROC OvR Macro: nan
+Average Precision Macro: 0.6295013950067686
