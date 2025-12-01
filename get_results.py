@@ -1,6 +1,8 @@
 import torch
 import yaml
 import pandas as pd
+import argparse
+import importlib
 
 from src.data.dataset import TokenChunkDataset, collate_fn_pad
 from src.models.GRU import RNNModel
@@ -9,13 +11,9 @@ from torch.utils.data import DataLoader
 import numpy as np
 from torch.nn.functional import softmax, sigmoid
 
-# INPUT
-model_cfg = "configs/wiki_BiLSTM.yaml" 
-model_pt = 'results/wiki_BiLSTM-20251129_052431/best_model.pt'
 
 
-
-def extract_predictions(model, dataloader, device='cpu', ignore_index=-100):
+def extract_predictions(model, dataloader, device='cuda', ignore_index=-100):
     model.to(device)
     model.eval()
 
@@ -91,61 +89,116 @@ def extract_predictions(model, dataloader, device='cpu', ignore_index=-100):
     return all_true, all_pred, all_proba
 
 
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Extract predictions from trained model")
+    parser.add_argument(
+        "--model_cfg", 
+        type=str, 
+        default="configs/wiki_BiLSTM.yaml",
+        help="Path to model configuration YAML file"
+    )
+    parser.add_argument(
+        "--model_pt", 
+        type=str, 
+        default="results/wiki_BiLSTM-20251129_052431/best_model.pt",
+        help="Path to trained model .pt file"
+    )
+    parser.add_argument(
+        "--output_prefix",
+        type=str,
+        default="test",
+        help="Prefix for output CSV files (default: test)"
+    )
+    parser.add_argument(
+        "--validation_metadata",
+        type=str,
+        default=None,
+        help="Path to validation metadata file. If not provided, will use validation_metadata from config file"
+    )
+    device = 'cuda'
+    args = parser.parse_args()
+    
+    model_cfg = args.model_cfg
+    model_pt = args.model_pt
+    output_prefix = args.output_prefix
+    validation_metadata = args.validation_metadata
+    
+    # Extract config name from path for output naming
+    import os
+    config_name = os.path.splitext(os.path.basename(model_cfg))[0]
+    full_output_prefix = f"{output_prefix}_{config_name}"
+
+    # cfg
+    with open(model_cfg, "r") as f:
+        config = yaml.safe_load(f)
+
+
+    # trained model
+    module = importlib.import_module(f'src.models.{config.get("model_name")}')
+    loaded_model = module.RNNModel(**config.get('model_params', {}))
+    loaded_model.to(device)
+    #loaded_model = RNNModel(
+    #  **config.get("model_params")
+    #)
+    loaded_model.load_state_dict(torch.load(model_pt, map_location=torch.device('cpu'))) # Loading the state dictionary
+    loaded_model.eval() # Set to evaluation mode
+
+
+    # validation dataset - use CLI argument if provided, otherwise use config
+    if validation_metadata is not None:
+        val_dataset = TokenChunkDataset(validation_metadata)
+        print(f"Using validation metadata from CLI: {validation_metadata}")
+    else:
+        val_dataset = TokenChunkDataset(config.get('validation_metadata'))
+        print(f"Using validation metadata from config: {config.get('validation_metadata')}")
+    
+    val_dataloader = DataLoader(val_dataset, batch_size=config.get('batch_size', 32), shuffle=False, num_workers=4, collate_fn=collate_fn_pad)
 
 
 
-# cfg
-with open(model_cfg, "r") as f:
-    config = yaml.safe_load(f)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    all_true, all_pred, all_proba = extract_predictions(loaded_model, val_dataloader, device=device)
+
+    # Example: inspect shapes
+    print("p_ini:", all_true['p_ini'].shape, all_pred['p_ini'].shape, all_proba['p_ini'].shape)     # () -> (N,)
+    print("p_fin:", all_true['p_fin'].shape, all_pred['p_fin'].shape, all_proba['p_fin'].shape)     # proba -> (N, C)
+    print("cap  :", all_true['cap'].shape, all_pred['cap'].shape, all_proba['cap'].shape)
 
 
-# trained model
-loaded_model = RNNModel(
-  **config.get("model_params")
-)
-loaded_model.load_state_dict(torch.load(model_pt), map_location=torch.device('cpu') ) # Loading the state dictionary
-loaded_model.eval() # Set to evaluation mode
-
-
-# validation dataset
-val_dataset = TokenChunkDataset(config.get('validation_metadata'))
-val_dataloader = DataLoader(val_dataset, batch_size=config.get('batch_size', 32), shuffle=False, num_workers=4, collate_fn=collate_fn_pad)
-
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-all_true, all_pred, all_proba = extract_predictions(loaded_model, val_dataloader, device=device)
-
-# Example: inspect shapes
-print("p_ini:", all_true['p_ini'].shape, all_pred['p_ini'].shape, all_proba['p_ini'].shape)     # () -> (N,)
-print("p_fin:", all_true['p_fin'].shape, all_pred['p_fin'].shape, all_proba['p_fin'].shape)     # proba -> (N, C)
-print("cap  :", all_true['cap'].shape, all_pred['cap'].shape, all_proba['cap'].shape)
-
-
-df_cap = pd.DataFrame()
-df_cap["y_cap"] = all_true["cap"]
-df_cap["y_pred"] = all_pred["cap"]
-df_cap["y_proba_0"] = all_proba["cap"][:,0]
-df_cap["y_proba_1"] = all_proba["cap"][:,1]
-df_cap["y_proba_2"] = all_proba["cap"][:,2]
-df_cap["y_proba_3"] = all_proba["cap"][:,3]
-df_cap.to_csv('data/processed/test_cap_rnn.csv', index=False)
+    df_cap = pd.DataFrame()
+    df_cap["y_cap"] = all_true["cap"]
+    df_cap["y_pred"] = all_pred["cap"]
+    df_cap["y_proba_0"] = all_proba["cap"][:,0]
+    df_cap["y_proba_1"] = all_proba["cap"][:,1]
+    df_cap["y_proba_2"] = all_proba["cap"][:,2]
+    df_cap["y_proba_3"] = all_proba["cap"][:,3]
+    df_cap.to_csv(f'data/processed/{full_output_prefix}_cap_rnn.csv', index=False)
 
 
 
-df_p_ini = pd.DataFrame()
-df_p_ini["y_punt_ini"] = all_true["p_ini"]
-df_p_ini["y_pred"] = all_pred["p_ini"]
-df_p_ini["y_proba_0"] = 1 - all_proba["p_ini"]
-df_p_ini["y_proba_1"] = all_proba["p_ini"]
-df_p_ini.to_csv('data/processed/test_ini_rnn.csv', index=False)
+    df_p_ini = pd.DataFrame()
+    df_p_ini["y_punt_ini"] = all_true["p_ini"]
+    df_p_ini["y_pred"] = all_pred["p_ini"]
+    df_p_ini["y_proba_0"] = 1 - all_proba["p_ini"]
+    df_p_ini["y_proba_1"] = all_proba["p_ini"]
+    df_p_ini.to_csv(f'data/processed/{full_output_prefix}_ini_rnn.csv', index=False)
 
 
-df_p_fin = pd.DataFrame()
-df_p_fin["y_punt_fin"] = all_true["p_fin"]
-df_p_fin["y_pred"] = all_pred["p_fin"]
-df_p_fin["y_proba_0"] = all_proba["p_fin"][:,0]
-df_p_fin["y_proba_1"] = all_proba["p_fin"][:,1]
-df_p_fin["y_proba_2"] = all_proba["p_fin"][:,2]
-df_p_fin["y_proba_3"] = all_proba["p_fin"][:,3]
-df_p_fin.to_csv('data/processed/test_fin_rnn.csv', index=False)
+    df_p_fin = pd.DataFrame()
+    df_p_fin["y_punt_fin"] = all_true["p_fin"]
+    df_p_fin["y_pred"] = all_pred["p_fin"]
+    df_p_fin["y_proba_0"] = all_proba["p_fin"][:,0]
+    df_p_fin["y_proba_1"] = all_proba["p_fin"][:,1]
+    df_p_fin["y_proba_2"] = all_proba["p_fin"][:,2]
+    df_p_fin["y_proba_3"] = all_proba["p_fin"][:,3]
+    df_p_fin.to_csv(f'data/processed/{full_output_prefix}_fin_rnn.csv', index=False)
+
+    print(f"Results saved to:")
+    print(f"  - data/processed/{full_output_prefix}_cap_rnn.csv")
+    print(f"  - data/processed/{full_output_prefix}_ini_rnn.csv")  
+    print(f"  - data/processed/{full_output_prefix}_fin_rnn.csv")
+
+
+if __name__ == "__main__":
+    main()
