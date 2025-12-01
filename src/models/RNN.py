@@ -18,7 +18,7 @@ class RNNModel(nn.Module):
     """
 
     def __init__(self, embed_dim: int = 768, hidden_dim: int = 256,
-                 num_layers: int = 1, bidirectional: bool = True, dropout: float = 0.1):
+                 num_layers: int = 1, bidirectional: bool = False, dropout: float = 0.1):
         super().__init__()
         # No embedding layer needed - we'll use pre-computed BERT embeddings
         self.embed_dim = embed_dim

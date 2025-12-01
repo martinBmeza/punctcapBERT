@@ -5,6 +5,7 @@ import yaml
 
 from pathlib import Path
 from datetime import datetime
+import io
 
 import torch
 import importlib
@@ -17,8 +18,11 @@ import torch.optim as optim
 from tqdm import tqdm
 import wandb
 
+import matplotlib
+matplotlib.use('Agg')  # Set backend before importing pyplot
 import matplotlib.pyplot as plt
 import seaborn as sns
+from PIL import Image
 
 from transformers import BertTokenizerFast
 
@@ -259,6 +263,8 @@ def train_one_epoch(model, dataloader, optimizer, device, epoch, log_every=50, u
 
         # Log step metrics to wandb (only if enabled)
         if use_wandb and wandb_log_steps:
+            # Calculate global step based on epoch and local step
+            global_step = (epoch - 1) * len(dataloader) + step
             wandb.log({
                 "step_loss": metrics["total_loss"],
                 "step_loss_p_ini": metrics["loss_p_ini"],
@@ -266,10 +272,8 @@ def train_one_epoch(model, dataloader, optimizer, device, epoch, log_every=50, u
                 "step_loss_cap": metrics["loss_cap"],
                 "step_balanced_acc_p_ini": metrics["balanced_acc_p_ini"],
                 "step_balanced_acc_p_fin": metrics["balanced_acc_p_fin"],
-                "step_balanced_acc_cap": metrics["balanced_acc_cap"],
-                "epoch": epoch,
-                "step": step + 1
-            })
+                "step_balanced_acc_cap": metrics["balanced_acc_cap"]
+            }, step=global_step)
 
         if (step + 1) % log_every == 0:
             pbar.set_postfix({
@@ -306,66 +310,90 @@ def create_confusion_matrices(all_preds, all_labels, class_names_dict):
         cm_p_ini = confusion_matrix(all_labels['p_ini'], all_preds['p_ini'])
         
         # Create seaborn heatmap
-        plt.figure(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(8, 6))
         sns.heatmap(cm_p_ini, 
                    annot=True, 
                    fmt='d', 
                    cmap='Blues',
                    xticklabels=class_names_dict['p_ini'],
                    yticklabels=class_names_dict['p_ini'],
-                   cbar_kws={'label': 'Count'})
-        plt.title('Confusion Matrix - Punctuation Initial')
-        plt.xlabel('Predicted')
-        plt.ylabel('Actual')
+                   cbar_kws={'label': 'Count'},
+                   ax=ax)
+        ax.set_title('Confusion Matrix - Punctuation Initial')
+        ax.set_xlabel('Predicted')
+        ax.set_ylabel('Actual')
         plt.tight_layout()
         
-        # Log to wandb as image
-        wandb_cms['confusion_matrix_p_ini'] = wandb.Image(plt)
-        plt.close()
+        # Save to buffer and create wandb image
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+        buf.seek(0)
+        
+        # Convert buffer to PIL Image for wandb
+        pil_image = Image.open(buf)
+        wandb_cms['confusion_matrix_p_ini'] = wandb.Image(pil_image)
+        buf.close()
+        plt.close(fig)
     
     # Punctuation final (multiclass)  
     if len(all_preds['p_fin']) > 0 and len(all_labels['p_fin']) > 0:
         cm_p_fin = confusion_matrix(all_labels['p_fin'], all_preds['p_fin'])
         
         # Create seaborn heatmap
-        plt.figure(figsize=(10, 8))
+        fig, ax = plt.subplots(figsize=(10, 8))
         sns.heatmap(cm_p_fin, 
                    annot=True, 
                    fmt='d', 
                    cmap='Blues',
                    xticklabels=class_names_dict['p_fin'],
                    yticklabels=class_names_dict['p_fin'],
-                   cbar_kws={'label': 'Count'})
-        plt.title('Confusion Matrix - Punctuation Final')
-        plt.xlabel('Predicted')
-        plt.ylabel('Actual')
+                   cbar_kws={'label': 'Count'},
+                   ax=ax)
+        ax.set_title('Confusion Matrix - Punctuation Final')
+        ax.set_xlabel('Predicted')
+        ax.set_ylabel('Actual')
         plt.tight_layout()
         
-        # Log to wandb as image
-        wandb_cms['confusion_matrix_p_fin'] = wandb.Image(plt)
-        plt.close()
+        # Save to buffer and create wandb image
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+        buf.seek(0)
+        
+        # Convert buffer to PIL Image for wandb
+        pil_image = Image.open(buf)
+        wandb_cms['confusion_matrix_p_fin'] = wandb.Image(pil_image)
+        buf.close()
+        plt.close(fig)
         
     # Capitalization (multiclass)
     if len(all_preds['cap']) > 0 and len(all_labels['cap']) > 0:
         cm_cap = confusion_matrix(all_labels['cap'], all_preds['cap'])
         
         # Create seaborn heatmap
-        plt.figure(figsize=(10, 8))
+        fig, ax = plt.subplots(figsize=(10, 8))
         sns.heatmap(cm_cap, 
                    annot=True, 
                    fmt='d', 
                    cmap='Blues',
                    xticklabels=class_names_dict['cap'],
                    yticklabels=class_names_dict['cap'],
-                   cbar_kws={'label': 'Count'})
-        plt.title('Confusion Matrix - Capitalization')
-        plt.xlabel('Predicted')
-        plt.ylabel('Actual')
+                   cbar_kws={'label': 'Count'},
+                   ax=ax)
+        ax.set_title('Confusion Matrix - Capitalization')
+        ax.set_xlabel('Predicted')
+        ax.set_ylabel('Actual')
         plt.tight_layout()
         
-        # Log to wandb as image
-        wandb_cms['confusion_matrix_cap'] = wandb.Image(plt)
-        plt.close()
+        # Save to buffer and create wandb image
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+        buf.seek(0)
+        
+        # Convert buffer to PIL Image for wandb
+        pil_image = Image.open(buf)
+        wandb_cms['confusion_matrix_cap'] = wandb.Image(pil_image)
+        buf.close()
+        plt.close(fig)
     
     return wandb_cms
 
@@ -576,7 +604,7 @@ def main():
                                            create_confusion_matrices_flag=create_confusion_matrices_flag)
             print(f"Epoch {epoch} VAL summary:", val_metrics)
 
-        # Log epoch metrics to wandb
+        # Log epoch metrics to wandb - ALWAYS log at the end of each epoch
         if use_wandb:
             log_dict = {
                 "epoch": epoch,
@@ -587,7 +615,7 @@ def main():
                 "best_train_loss": best_loss
             }
             
-            # Add validation metrics if available
+            # Add validation metrics if available (only when evaluated)
             if val_metrics is not None:
                 # Regular metrics
                 val_update = {
@@ -605,7 +633,8 @@ def main():
                     if cm_key in val_metrics:
                         log_dict[cm_key] = val_metrics[cm_key]
             
-            wandb.log(log_dict)
+            # Log everything together with consistent step (epoch number)
+            wandb.log(log_dict, step=epoch)
 
         # save checkpoint
         if config.get('store_checkpoints', False):
@@ -635,12 +664,12 @@ def main():
             torch.save(model.state_dict(), best_path)
             print(f"Saved best model to {best_path} (best {loss_type} loss: {current_loss:.4f})")
             
-            # Log best model to wandb
+            # Log best model to wandb with consistent step
             if use_wandb:
                 wandb.log({
                     "best_epoch": epoch, 
                     "best_val_loss" if val_metrics is not None else "best_train_loss": current_loss
-                })
+                }, step=epoch)
 
     # Finish wandb run
     if use_wandb:
